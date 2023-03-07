@@ -1,0 +1,534 @@
+/*!
+  Theme: a11y-dark
+  Author: @ericwbailey
+  Maintainer: @ericwbailey
+
+  Based on the Tomorrow Night Eighties theme: https://github.com/isagalaev/highlight.js/blob/master/src/styles/tomorrow-night-eighties.css
+*/
+
+.hljs {
+  background: #2b2b2b;
+  color: #f8f8f2;
+}
+
+/* Comment */
+.hljs-comment,
+.hljs-quote {
+  color: #d4d0ab;
+}
+
+/* Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+  color: #ffa07a;
+}
+
+/* Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+  color: #f5ab35;
+}
+
+/* Yellow */
+.hljs-attribute {
+  color: #ffd700;
+}
+
+/* Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+  color: #abe338;
+}
+
+/* Blue */
+.hljs-title,
+.hljs-section {
+  color: #00e0e0;
+}
+
+/* Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #dcc6e0;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+@media screen and (-ms-high-contrast: active) {
+
+  .hljs-addition,
+  .hljs-attribute,
+  .hljs-built_in,
+  .hljs-bullet,
+  .hljs-comment,
+  .hljs-link,
+  .hljs-literal,
+  .hljs-meta,
+  .hljs-number,
+  .hljs-params,
+  .hljs-string,
+  .hljs-symbol,
+  .hljs-type,
+  .hljs-quote {
+    color: highlight;
+  }
+
+  .hljs-keyword,
+  .hljs-selector-tag {
+    font-weight: bold;
+  }
+}
+
+/* Hemisu Dark */
+/* https://jmblog.github.io/color-themes-for-google-code-highlightjs */
+/* Original theme - http://noahfrederick.com/vim-color-scheme-hemisu/ */
+/* https://jmblog.github.io/color-themes-for-google-code-highlightjs */
+.hemisu-comment,
+pre .comment,
+pre .xml .doctype,
+pre .html .doctype {
+  color: #777777;
+}
+
+.hemisu-accent1,
+pre .number,
+pre .ruby .keyword {
+  color: #9fd3e6;
+}
+
+.hemisu-accent2,
+pre .string,
+pre .regexp,
+pre .xml .value,
+pre .html .value {
+  color: #b1d631;
+}
+
+.hemisu-accent3,
+pre .keyword,
+pre .title,
+pre .constant,
+pre .xml .tag,
+pre .html .tag,
+pre .css .rules .attribute {
+  color: #bbffaa;
+}
+
+.hemisu-accent4 {
+  color: #ece1c8;
+}
+
+pre code {
+  display: block;
+  background: black;
+  color: #eeeeee;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+pre .xml .tag .title {
+  color: #eeeeee;
+}
+
+pre .html .tag .title {
+  color: #eeeeee;
+}
+
+body {
+  margin-right: 8px;
+  overflow-y: scroll;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto Mono', 'Roboto', 'Noto Sans Simplified Chinese';
+}
+
+.container {
+  width: 100%;
+  height: 100vh;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+.chat-window {
+  max-height: none;
+  /* 没有限制 */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+
+
+
+
+.user-message {
+  margin: 0 auto;
+  /* 水平居中 */
+  max-width: 60%;
+  /* 添加文本的最大宽度 */
+}
+
+.bot-message {
+  margin: 0 auto;
+  /* 水平居中 */
+  max-width: 60%;
+  /* 添加文本的最大宽度 */
+
+}
+
+.user-message-block {
+  background-color: rgb(255, 255, 255);
+  margin: 0;
+  padding: 1.5%;
+  /* 添加灰色阴影 */
+}
+
+/* 样式 ChatGPT 回复 */
+.bot-message-block {
+  background-color: rgb(250, 255, 250);
+  margin: 0;
+  padding: 1.5%;
+  box-shadow: 0px -1.5px 1.5px -1.5px rgba(0, 0, 0, 0.3) inset,
+    0px 1.5px 1.5px -1.5px rgba(0, 0, 0, 0.3) inset;
+  /* 添加灰色阴影 */
+}
+
+.codeBlockContainer {
+  position: relative;
+}
+
+.copybutton {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 0.1rem 0.3rem;
+  background-color: white;
+  border: 2px solid rgb(174, 173, 173);
+  border-radius: 0.5rem;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  color: rgb(0, 0, 0);
+  font-family: 'Tilt Neon';
+  text-align: center;
+}
+
+.copybutton:hover {
+  background-color: #d4d2d2;
+  /* 鼠标悬停时按钮的背景颜色 */
+}
+
+
+/* 输入框容器 */
+#message-input-container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 5%;
+  left: 40%;
+  width: 100%;
+  max-width: 40%;
+  background-color: #fff;
+  padding: 10px;
+  box-sizing: border-box;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+/* 输入框 */
+#message-input {
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  margin: 0 auto;
+  line-height: 1;
+  padding: 5px;
+  /* 将左右外边距设置为auto */
+}
+
+textarea {
+  /* resize: none; */
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+
+
+#toggle-source-render {
+  z-index: 9999;
+  position: fixed;
+  top: 10%;
+  right: 10%;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  font-family: 'Tilt Neon';
+  width: 80px;
+  height: 40px;
+}
+
+#toggle-source-render:hover {
+  background-color: #ddd;
+  border-color: #aaa;
+  color: #045f9c;
+}
+
+code {
+  font-family: "Courier Prime";
+  background-color: #ededed;
+}
+
+textarea {
+  font-family: "Ubuntu", 'Noto Sans Simplified Chinese';
+  font-size: large;
+}
+
+#left-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 20%;
+  background-color: #202123;
+}
+
+#left-sidebar img {
+  display: block;
+  margin: 0 auto;
+  width: 40%;
+  margin-top: 10%;
+  height: auto;
+  box-shadow: 0 0 -100px rgba(0, 0, 0, 0.2);
+}
+
+#left-sidebar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  margin-top: 10%;
+  width: 100%;
+
+}
+
+.selected {
+  background-color: #7b7b7b !important;
+}
+
+#left-sidebar li {
+  position: relative;
+  padding: 8px 16px;
+  font-size: 20px;
+  border: 1px solid #454545;
+  box-shadow: 0px 0px 2px #202123;
+  background-color: #252525;
+  font-family: "Ubuntu", 'Noto Sans Simplified Chinese';
+  text-align: center;
+  color: white;
+}
+
+#left-sidebar li:hover {
+  background-color: #575757;
+}
+
+#content {
+  margin-left: 20%;
+  /* 与左侧边栏宽度相同 */
+  border: none;
+  /* 去除边框 */
+}
+
+#newChatButton {
+  width: 10%;
+  position: fixed;
+  left: 5%;
+  bottom: 7%;
+  background-color: #a5a5a5;
+  border: 1px solid #787878;
+  box-shadow: 2px 2px 2px #2e2e2e;
+  padding: 10px;
+  font-family: "Ubuntu", 'Noto Sans Simplified Chinese';
+  font-size: large;
+}
+
+#newChatButton:hover {
+  background-color: #e6e6e6;
+}
+
+.delete-btn {
+  background-color: transparent;
+  filter: invert(1);
+  border: none;
+  position: absolute;
+  right: 3%;
+  bottom: 30%;
+  z-index: 9999;
+}
+
+.delete-btn:hover {
+  color: red;
+  filter: invert(0);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background-color: transparent;
+  position: absolute;
+  right: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.titleContainer {
+  position: relative;
+}
+
+/* 输入框容器 */
+#sys-message-input-container {
+  transition: transform 0.2s, opacity 0.2s, left 0.6s, max-width 0.6s;
+}
+
+#sys-message-input-container.showMsg {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    top: 5%;
+    left: 15%;
+    width: 100%;
+    max-width: 50%;
+    background-color: #fff;
+    padding: 10px;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    opacity: 1;
+}
+
+#sys-message-input-container.hideMsg {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    top: 6%;
+    left: 7%;
+    width: 100%;
+    max-width: 0%;
+    background-color: #fff;
+    padding: 10px;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    opacity: 0;
+    transform: scale(0);
+}
+
+/* 输入框 */
+#sys-message-input {
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  margin: 0 auto;
+  padding: 5px;
+  /* 将左右外边距设置为auto */
+}
+
+#sysMsgBtn {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  font-family: 'Tilt Neon';
+  width: 120px;
+  height: 60px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#sysMsgBtn:hover {
+  background-color: #ddd;
+  border-color: #aaa;
+  color: #045f9c;
+}
+
+#temperatureSlider {
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+#toppSlider {
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+#preSlider {
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+
+
+#slider-container{
+    position: fixed;
+    bottom: 6%;
+    right: 3%;
+    width: 12%; /* 调整滑块的宽度 */
+    text-align: center;
+}

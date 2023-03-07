@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+  <script>
+    WebFont.load({
+      google: {
+        families: ['Roboto Mono', 'Roboto', 'Noto Sans Simplified Chinese', 'Tilt Neon', 'Courier Prime', "Ubuntu"]
+      }
+    });
+  </script>
+  <title>CatGPT</title>
+
+</head>
+
+<body>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="static/default.min.css">
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.7.0/build/highlight.min.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" />
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      options: {
+        autorun: true
+      }
+    };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <div id="left-sidebar">
+    <img src="static/sidebar-logo.jpg" onclick="showAndReadSysMessageInput()" />
+    <br>
+    <ul id="fileList">
+    </ul>
+    <button id="newChatButton">New Chat</button>
+  </div>
+  <div class="container" id="content">
+
+    <!-- <button class="copybutton">Copy</button> -->
+    <button onclick="toggleSourceRender()" id="toggle-source-render">Render</button>
+    <div class="container" id=chatWindowContainer style="position:relative;">
+      <div id=rendered-md class="chat-window" style="display:block;"></div>
+      <div id=sources class="chat-window" style="display:none;"></div>
+    </div>
+
+    <div id="message-input-container">
+      <textarea id="message-input" placeholder="Type your message here..."> </textarea>
+    </div>
+
+    <div id="slider-container">
+        <label for="temperatureSlider" id = "temperatureSliderLabel"> Temperature: 1.00 </label>
+        <input type="range" id="temperatureSlider" min="0" max="100" step="1" value="100" oninput="inputTemperature(this.value)" onchange="setTemperature(this.value)">
+        <label for="toppSlider" id = "toppSliderLabel"> Top-p: 1.00 </label>
+        <input type="range" id="toppSlider" min="0" max="100" step="1" value="100" oninput="inputtopp(this.value)" onchange="settopp(this.value)">
+        <label for="preSlider" id = "preSliderLabel"> Presence-penalty: 0.00 </label>
+        <input type="range" id="preSlider" min="-200" max="200" step="1" value="0" oninput="inputpre(this.value)" onchange="setpre(this.value)">
+    </label>
+    
+    
+
+    <div id="sys-message-input-container" class ="hideMsg" >
+      <textarea id="sys-message-input" placeholder="Type your message here...">You are a helpful assistant.</textarea>
+      <button id="sysMsgBtn">设定完成</button>
+    </div>
+  </div>
+
+  <script>
+    var messageInput = $("#message-input");
+    var originalHeight = messageInput.height();
+    var socket = io();
+    var current_bot_rendered_message = null;
+    var current_bot_source_message = null;
+    var buffer = "";
+    var buffer_idx = 0;
+    var current_selected_title = null;
+    var GPTtemperature = 1;
+    var GPTTopp = 1;
+    var GPTpre = 0;
+
+    showdown.setFlavor('github');
+    showdown.setOption('literalMidWordUnderscores', 'true');
+    showdown.setOption('backslashEscapesHTMLTags', 'true');
+    var converter = new showdown.Converter();
+
+    function showAndReadSysMessageInput(){
+        getSysPrompt(current_selected_title.name);
+        showSysMessageInput();
+    }
+
+    function setTemperature(temperature) {
+        GPTtemperature = temperature / 100;
+        document.getElementById("temperatureSliderLabel").innerHTML = "Temperature: " + GPTtemperature.toFixed(2);
+        console.log("GPTtemperature: ", GPTtemperature);
+    }
+
+    function inputTemperature(temperature) {
+        document.getElementById("temperatureSliderLabel").innerHTML = "Temperature: " + (temperature / 100).toFixed(2);
+    }
+
+    function settopp(topp) {
+        GPTTopp = topp / 100;
+        document.getElementById("toppSliderLabel").innerHTML = "Top-p: " + GPTTopp.toFixed(2);
+        console.log("GPTTopp: ", GPTTopp);
+    }
+
+    function inputtopp(topp) {
+        document.getElementById("toppSliderLabel").innerHTML = "Top-p: " + (topp / 100).toFixed(2);
+    }
+
+    function setpre(pre) {
+        GPTpre = pre / 100;
+        document.getElementById("preSliderLabel").innerHTML = "Presence-penalty: " + GPTpre.toFixed(2);
+        console.log("GPTpre: ", GPTpre);
+    }
+
+    function inputpre(pre) {
+        document.getElementById("preSliderLabel").innerHTML = "Presence-penalty: " + (pre / 100).toFixed(2);
+    }
+    
+    function showSysMessageInput() {
+        var sysMessageInputContainer = document.getElementById("sys-message-input-container");
+        if (sysMessageInputContainer.classList.contains("hideMsg")) {
+            sysMessageInputContainer.classList.remove("hideMsg");
+            sysMessageInputContainer.classList.add("showMsg");
+        }else{
+            sysMessageInputContainer.classList.remove("showMsg");
+            sysMessageInputContainer.classList.add("hideMsg");
+        }
+    }
+
+    var sysMsgBtn = document.getElementById("sysMsgBtn");
+    sysMsgBtn.addEventListener("click", function () {
+        var sysMessageInput = document.getElementById("sys-message-input");
+        var sysMessage = sysMessageInput.value;
+        console.log('sysMessage: ', sysMessage);
+        socket.emit("send_system_message", current_selected_title.name, sysMessage);
+        showSysMessageInput();
+    });
+
+    function markdown_to_html(md) {
+      var html = converter.makeHtml(md);
+      html = html.replace(/<pre.*><code/g, `<div class="codeBlockContainer" style> <button class="copybutton">Copy</button>$&`);
+      html = html.replace(/<\/code><\/pre>/g, `</code></div>`);
+      return html;
+    }
+
+    function toggleSourceRender() {
+      var btn = document.getElementById("toggle-source-render");
+      if (btn.innerHTML == "Source") {
+        btn.innerHTML = "Render";
+        document.getElementById("rendered-md").style.display = "block";
+        document.getElementById("sources").style.display = "none";
+      } else {
+        btn.innerHTML = "Source";
+        document.getElementById("rendered-md").style.display = "none";
+        document.getElementById("sources").style.display = "block";
+      }
+    }
+
+    socket.on("response", function (message) {
+      buffer += message;
+      current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
+      if (buffer_idx % 10 != 0) {
+        sub_element = current_bot_rendered_message;
+        while (sub_element.lastElementChild != null && sub_element.lastElementChild.nextElementSibling == null)
+          sub_element = sub_element.lastElementChild;
+        sub_element.innerHTML += message.replace(/\n/gi, '<br>');
+      } else {
+        // check numbers of ``` in buffer
+        var count = (buffer.match(/```/g) || []).length;
+        buffer2 = buffer;
+        if (count % 2 == 1) {
+          buffer2 += "\n```";
+        }
+        current_bot_rendered_message.innerHTML = markdown_to_html(buffer2);
+        update_mathjax_hl();
+      }
+      scroll_distance = get_scroll_distance();
+      if (scroll_distance > 200) {
+        scrollToBottom(200);
+      }
+
+      buffer_idx += 1;
+    });
+
+    socket.on("response_end", function (message) {
+      current_bot_rendered_message.innerHTML = markdown_to_html(buffer);
+      buffer = "";
+      buffer_idx = 0;
+      update_mathjax_hl();
+      // get all buttons in current_bot_rendered_message
+      const copyBtns = current_bot_rendered_message.querySelectorAll('.copybutton');
+      copyBtns.forEach(copyBtn => {
+        copyBtn.addEventListener('click', () => {
+          const codeBlock = copyBtn.nextElementSibling;
+          const code = codeBlock.innerText.trim();
+          navigator.clipboard.writeText(code)
+            .then(() => {
+              copyBtn.textContent = 'Copied'; // 更改按钮文本
+              setTimeout(() => {
+                copyBtn.textContent = 'Copy'; // 1.5秒后将文本更改回来
+              }, 1500);
+            })
+            .catch(console.error);
+        });
+      });
+      if (current_selected_title.innerHTML == "untitled") {
+        $.get('/askTitle', { dirname: current_selected_title.name }, function (data) {
+          current_selected_title.innerHTML = data;
+          console.log('get title', data);
+          saveData();
+        });
+      } else
+        saveData();
+      scrollToBottom(500);
+    });
+
+    function update_mathjax_hl() {
+      MathJax.typeset([document.getElementById('rendered-md')]);
+      hljs.highlightAll();
+    }
+
+    function create_new_user_message_block(message) {
+      var new_user_message_block = document.createElement("div");
+      new_user_message_block.classList.add("user-message-block");
+      var new_user_message = document.createElement("div");
+      new_user_message.classList.add("user-message");
+      new_user_message.innerHTML = message;
+      new_user_message_block.appendChild(new_user_message);
+      return new_user_message_block;
+    }
+
+    function create_new_bot_message_block(message) {
+      var new_bot_message_block = document.createElement("div");
+      new_bot_message_block.classList.add("bot-message-block");
+      var new_bot_message = document.createElement("div");
+      new_bot_message.classList.add("bot-message");
+      new_bot_message.innerHTML = message;
+      new_bot_message_block.appendChild(new_bot_message);
+      return new_bot_message_block;
+    }
+
+    function get_scroll_distance() {
+      const startScroll = window.pageYOffset;
+      const endScroll = document.body.scrollHeight - window.innerHeight;
+      const scrollDistance = endScroll - startScroll;
+      return scrollDistance;
+    }
+
+
+    function scrollToBottom(duration) {
+      const startTime = performance.now();
+      const startScroll = window.pageYOffset;
+      const endScroll = document.body.scrollHeight - window.innerHeight;
+
+      function animate(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const curvedProgress = easeInOutQuad(progress);
+        const targetScroll = startScroll + (endScroll - startScroll) * curvedProgress;
+        window.scrollTo(0, targetScroll);
+        if (window.pageYOffset < endScroll && elapsedTime < duration) {
+          requestAnimationFrame(animate);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // 使用easeInOutQuad贝塞尔曲线函数，在滚动过程中先慢后快再慢
+    function easeInOutQuad(progress) {
+      return progress < .5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+    }
+
+    function sendMessage() {
+      var origin_message = messageInput.val();
+      message = origin_message.replace(/\n/gi, '<br>');
+      const lastChildRendered = document.getElementById("rendered-md").lastElementChild;
+      const lastChildSources = document.getElementById("sources").lastElementChild;
+      if (!lastChildRendered || !lastChildSources || lastChildRendered.classList.contains("bot-message-block")) {
+        var user_block_sources = create_new_user_message_block(message);
+        var user_block_rendered = create_new_user_message_block(markdown_to_html(message));
+        document.getElementById("rendered-md").appendChild(user_block_rendered);
+        document.getElementById("sources").appendChild(user_block_sources);
+      } else {
+        lastChildRendered.children[0].innerHTML = message;
+        lastChildSources.children[0].innerHTML = markdown_to_html(message);
+      }
+      messageInput.val('').height(originalHeight);
+      var bot_block_sources = create_new_bot_message_block("");
+      var bot_block_rendered = create_new_bot_message_block("");
+      document.getElementById("rendered-md").appendChild(bot_block_rendered);
+      document.getElementById("sources").appendChild(bot_block_sources);
+      current_bot_rendered_message = bot_block_rendered.children[0];
+      current_bot_source_message = bot_block_sources.children[0];
+      var user_block_sources = create_new_user_message_block("<br> <br> <br> <br> <br> <br> <br>");
+      var user_block_rendered = create_new_user_message_block("<br> <br> <br> <br> <br> <br> <br>");
+      document.getElementById("rendered-md").appendChild(user_block_rendered);
+      document.getElementById("sources").appendChild(user_block_sources);
+      socket.emit("send_message", current_selected_title.name, origin_message, GPTTopp, GPTtemperature, GPTpre);
+      scrollToBottom(1000);
+    }
+
+    messageInput.keydown(function (event) {
+      if (event.keyCode == 13 && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    messageInput.on('input', function () {
+      this.style.height = 'auto'; // 先将高度设置为 auto
+      this.style.height = (this.scrollHeight > originalHeight ? this.scrollHeight : originalHeight) + 'px'; // 然后将高度设置为内容高度或原始高度（两者中较大的一个）
+    });
+
+    function addTitle(file_id, title) {
+      const fileList = document.querySelector('#fileList');
+      const listItem = document.createElement('li');
+      listItem.innerHTML = title;
+      // change color when clicked
+      listItem.addEventListener('click', () => {
+        getData(file_id);
+        if (current_selected_title)
+          current_selected_title.classList.remove('selected');
+        current_selected_title = listItem;
+        current_selected_title.classList.add('selected');
+      });
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+      deleteBtn.classList.add('delete-btn');
+      const container = document.createElement('div');
+      container.classList.add('titleContainer');
+      container.appendChild(listItem);
+      container.appendChild(deleteBtn);
+      deleteBtn.addEventListener('click', () => {
+        if (current_selected_title == listItem) {
+          current_selected_title = null;
+          clearChat();
+          fileList.removeChild(container);
+          if (fileList.children.length > 0) {
+            current_selected_title = fileList.firstElementChild.firstElementChild;
+            current_selected_title.classList.add('selected');
+            getData(current_selected_title.name);
+          }
+          else {
+            newTitle();
+          }
+        } else {
+          fileList.removeChild(container);
+        }
+        deleteData(file_id);
+      });
+      listItem.name = file_id;
+      console.log('add title with file id: ' + file_id);
+      fileList.appendChild(container);
+      return listItem;
+    }
+
+    function newTitle() {
+      item = addTitle(Date.now().toString(), 'untitled');
+      clearChat();
+      if (current_selected_title)
+        current_selected_title.classList.remove('selected');
+      current_selected_title = item;
+      current_selected_title.classList.add('selected');
+      saveData();
+    }
+
+    function clearChat() {
+      const rendered = document.getElementById('rendered-md');
+      const sources = document.getElementById('sources');
+      while (rendered.firstChild) {
+        rendered.removeChild(rendered.firstChild);
+      }
+      while (sources.firstChild) {
+        sources.removeChild(sources.firstChild);
+      }
+    }
+
+    function getAllDataDirs() {
+      fetch('/getAllDataDirs')
+        .then(response => response.json())
+        .then(data => {
+          // 遍历文件列表，构建 HTML 元素并插入页面中, 用data.files, data.titles
+          const fileList = document.querySelector('#fileList');
+          data.files.forEach((file, index) => {
+            addTitle(file, data.titles[index]);
+            console.log('load file: ' + file);
+          });
+          if (data.files.length == 0) {
+            newTitle();
+          } else {
+            current_selected_title = fileList.firstElementChild.firstElementChild;
+            current_selected_title.classList.add('selected');
+            getData(data.files[0]);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    const newChatButton = document.getElementById('newChatButton');
+    newChatButton.addEventListener('click', () => {
+      newTitle();
+    });
+
+    function getSysPrompt(dirname){
+        $.get('/getSysPrompt', { dirname: dirname }, function (response) {
+            // sys-message-input
+            const sysMessageInput = document.getElementById('sys-message-input');
+            console.log('get sys message: ' + response);
+            sysMessageInput.value = response;
+        });
+    }
+
+    function getData(dirname) {
+      $.get('/getData', { dirname: dirname }, function (response) {
+        chatWindowContainer = document.getElementById('chatWindowContainer');
+        chatWindowContainer.innerHTML = response;
+        const copyBtns = document.getElementsByClassName('copybutton');
+        for (let i = 0; i < copyBtns.length; i++) {
+          console.log(copyBtns[i]);
+          const copyBtn = copyBtns[i];
+          copyBtn.addEventListener('click', () => {
+            const codeBlock = copyBtn.nextElementSibling;
+            const code = codeBlock.innerText.trim();
+            navigator.clipboard.writeText(code)
+              .then(() => {
+                copyBtn.textContent = 'Copied'; // 更改按钮文本
+                setTimeout(() => {
+                  copyBtn.textContent = 'Copy'; // 1.5秒后将文本更改回来
+                }, 1500);
+              })
+              .catch(console.error);
+          });
+        }
+      });
+    };
+
+    function deleteData(dirname) {
+      $.get('/deleteData', { dirname: dirname }, function (response) {
+        console.log(response);
+      });
+    };
+
+    function saveData() {
+      const chat_content = document.getElementById('chatWindowContainer').innerHTML;
+      const title = current_selected_title.innerHTML;
+      const dirname = current_selected_title.name;
+      console.log('save data with dirname: ' + dirname);
+      console.log('save data with title: ' + title);
+      //   console.log('save data with chat_content: ' + chat_content);
+      $.post('/saveData', { dirname: dirname, title: title, chat_content: chat_content }, function (response) {
+        console.log(response);
+      });
+    }
+    window.addEventListener('load', () => {
+      window.scrollTo(0, 0);
+      getAllDataDirs();
+    });
+  </script>
+</body>
+
+</html>
