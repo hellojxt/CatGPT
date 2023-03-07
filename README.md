@@ -6,7 +6,7 @@ First, install the requirements:
 ```
 pip install -r requirements.txt
 ```
-And set the environment variable `OPENAI_API_KEY` to your OpenAI API key (recommended to add it to your `.bashrc` or `.zshrc` file).
+And set the environment variable `OPENAI_API_KEY` to your [OpenAI API](https://platform.openai.com/account/api-keys) key (recommended to add it to your `.bashrc` or `.zshrc` file).
 Then, run the script:
 ```
 python terminal.py
