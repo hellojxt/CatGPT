@@ -16,7 +16,7 @@ Or, if you want to use the web interface:
 python web.py username port
 ```
 and then go to `http://localhost:port` in your browser.
-For windows users, you need to run windows-cmd-run.bat instead.
+For windows users, you need to run windows-cmd-run.bat instead (replace the username, port and api key with your own).
 
 Special feature
 - You can click the cat icon to change the system prompt.
