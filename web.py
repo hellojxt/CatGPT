@@ -3,20 +3,14 @@ import platform
 
 system = platform.system()
 
-if system == 'Darwin':  # MacOS
+if system == 'Darwin' or system == 'Linux':  # Mac or Linux
     os.environ['http_proxy'] = 'http://127.0.0.1:7890'
     os.environ['https_proxy'] = 'http://127.0.0.1:7890'
     os.environ['all_proxy'] = 'socks5://127.0.0.1:7890'
 
 elif system == 'Windows':  # Windows
     # 设置代理需要使用不同的命令，这里使用了netsh命令来设置代理
-    proxy = '127.0.0.1:7890'
-    os.system(f'netsh winhttp set proxy http://{proxy} https://{proxy} socks={proxy}')
-
-else:  # Linux
-    os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-    os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-    os.environ['all_proxy'] = 'socks5://127.0.0.1:7890'
+    os.system('set http_proxy=http://127.0.0.1:7890 & set https_proxy=http://127.0.0.1:7890')
 
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
@@ -175,6 +169,10 @@ import sys
 if __name__ == '__main__':
     Port = int(sys.argv[2])
     user = sys.argv[1]
+    if not os.path.exists('./data'):
+        os.mkdir('./data')
+    if not os.path.exists('./trash'):
+        os.mkdir('./trash')
     if not os.path.exists(f'./data/{user}'):
         os.mkdir(f'./data/{user}')
     print('user: ', user)
