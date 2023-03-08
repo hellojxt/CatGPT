@@ -54,7 +54,7 @@
     </div>
 
     <div id="message-input-container">
-      <textarea id="message-input" placeholder="Type your message here..."> </textarea>
+      <textarea id="message-input" placeholder="Type your message here..."></textarea>
     </div>
 
     <div id="slider-container">
@@ -182,6 +182,8 @@
         if (count % 2 == 1) {
           buffer2 += "\n```";
         }
+        // replace ```cuda with ```c++
+        buffer2 = buffer2.replace(/```cuda/g, "```c++");
         current_bot_rendered_message.innerHTML = markdown_to_html(buffer2);
         update_mathjax_hl();
       }

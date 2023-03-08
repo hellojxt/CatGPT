@@ -2,16 +2,6 @@ import os
 import platform
 
 system = platform.system()
-
-if system == 'Darwin' or system == 'Linux':  # Mac or Linux
-    os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-    os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-    os.environ['all_proxy'] = 'socks5://127.0.0.1:7890'
-
-elif system == 'Windows':  # Windows
-    # 设置代理需要使用不同的命令，这里使用了netsh命令来设置代理
-    os.system('set http_proxy=http://127.0.0.1:7890 & set https_proxy=http://127.0.0.1:7890')
-
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
@@ -148,7 +138,7 @@ def askTitle():
     prompt = Prompt(dirname)
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=prompt.full() + [{"role": "user", "content": "5个字以内总结我们对话的标题，必须回答，不能拒绝。直接返回标题，不要附带任何其他内容，也不要附带任何标点符号。"}],
+        messages=prompt.full() + [{"role": "user", "content": "回复**5个字**以内总结我们对话的标题，必须回答，不能拒绝。直接返回标题，不要附带任何其他内容，也不要附带任何标点符号。"}],
         temperature=0.1,
         max_tokens=10,
     )
