@@ -27,7 +27,7 @@
         inlineMath: [['$', '$'], ['\\(', '\\)']]
       },
       svg: {
-        fontCache: 'global'
+        fontCache: 'local'
       },
       options: {
         autorun: true
@@ -148,10 +148,14 @@
     });
 
     function markdown_to_html(md) {
-      var html = converter.makeHtml(md);
-      html = html.replace(/<pre.*><code/g, `<div class="codeBlockContainer" style> <button class="copybutton">Copy</button>$&`);
-      html = html.replace(/<\/code><\/pre>/g, `</code></div>`);
-      return html;
+        var html = converter.makeHtml(md);
+        html = html.replace(/<pre.*><code/g, `<div class="codeBlockContainer" style> <button class="copybutton">Copy</button>$&`);
+        html = html.replace(/<\/code><\/pre>/g, `</code></div>`);
+        /*replace </em> or <em> with _*/
+        html = html.replace(/<\/em>/g, `_`);
+        html = html.replace(/<em>/g, `_`);
+
+        return html;
     }
 
     function toggleSourceRender() {
