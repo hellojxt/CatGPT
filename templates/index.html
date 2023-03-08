@@ -148,13 +148,16 @@
     });
 
     function markdown_to_html(md) {
+        /*replace * with <em1>*/
+        md = md.replace(/\*/g, `<em1>`);
+        /*replace _ with <em2>*/
+        md = md.replace(/_/g, `<em2>`);
         var html = converter.makeHtml(md);
         html = html.replace(/<pre.*><code/g, `<div class="codeBlockContainer" style> <button class="copybutton">Copy</button>$&`);
         html = html.replace(/<\/code><\/pre>/g, `</code></div>`);
-        /*replace </em> or <em> with _*/
-        html = html.replace(/<\/em>/g, `_`);
-        html = html.replace(/<em>/g, `_`);
-
+        /*replace <em1> with * and <em2> with _*/
+        html = html.replace(/<em1>/g, `*`);
+        html = html.replace(/<em2>/g, `_`);
         return html;
     }
 
@@ -174,7 +177,7 @@
     socket.on("response", function (message) {
       buffer += message;
       current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
-      if (buffer_idx % 10 != 0) {
+      if (buffer_idx % 20 != 0) {
         sub_element = current_bot_rendered_message;
         while (sub_element.lastElementChild != null && sub_element.lastElementChild.nextElementSibling == null)
           sub_element = sub_element.lastElementChild;
