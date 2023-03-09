@@ -3,4 +3,4 @@ flask-socketio
 openai
 tiktoken
 rich
-eventlet
+gevent
