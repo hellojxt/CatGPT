@@ -86,9 +86,7 @@
     var GPTtemperature = 1;
     var GPTTopp = 1;
     var GPTpre = 0;
-
     showdown.setFlavor('github');
-    showdown.setOption('literalMidWordUnderscores', 'true');
     showdown.setOption('backslashEscapesHTMLTags', 'true');
     var converter = new showdown.Converter();
 
@@ -148,16 +146,13 @@
     });
 
     function markdown_to_html(md) {
-        /*replace * with <em1>*/
-        md = md.replace(/\*/g, `<em1>`);
-        /*replace _ with <em2>*/
-        md = md.replace(/_/g, `<em2>`);
         var html = converter.makeHtml(md);
         html = html.replace(/<pre.*><code/g, `<div class="codeBlockContainer" style> <button class="copybutton">Copy</button>$&`);
         html = html.replace(/<\/code><\/pre>/g, `</code></div>`);
         /*replace <em1> with * and <em2> with _*/
-        html = html.replace(/<em1>/g, `*`);
-        html = html.replace(/<em2>/g, `_`);
+        // html = html.replace(/myemstar/g, `*`);
+        // console.log(html)
+        // html = html.replace(/myemunderline/g, `_`);
         return html;
     }
 
@@ -177,7 +172,7 @@
     socket.on("response", function (message) {
       buffer += message;
       current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
-      if (buffer_idx % 20 != 0) {
+      if (buffer_idx % 5 != 0) {
         sub_element = current_bot_rendered_message;
         while (sub_element.lastElementChild != null && sub_element.lastElementChild.nextElementSibling == null)
           sub_element = sub_element.lastElementChild;
@@ -191,8 +186,10 @@
         }
         // replace ```cuda with ```c++
         buffer2 = buffer2.replace(/```cuda/g, "```c++");
-        current_bot_rendered_message.innerHTML = markdown_to_html(buffer2);
-        update_mathjax_hl();
+        current_bot_rendered_message.innerHTML = buffer2;
+        MathJax.typeset([current_bot_rendered_message]);
+        current_bot_rendered_message.innerHTML = markdown_to_html(current_bot_rendered_message.innerHTML);
+        hljs.highlightAll();
       }
       scroll_distance = get_scroll_distance();
       if (scroll_distance > 200) {
@@ -203,7 +200,11 @@
     });
 
     socket.on("response_end", function (message) {
-      current_bot_rendered_message.innerHTML = markdown_to_html(buffer);
+      current_bot_rendered_message.innerHTML = buffer;
+      MathJax.typeset([current_bot_rendered_message]);
+      current_bot_rendered_message.innerHTML = markdown_to_html(current_bot_rendered_message.innerHTML);
+      console.log("buffer: ", buffer);
+      console.log(current_bot_rendered_message.innerHTML);
       buffer = "";
       buffer_idx = 0;
       update_mathjax_hl();
@@ -235,7 +236,7 @@
     });
 
     function update_mathjax_hl() {
-      MathJax.typeset([document.getElementById('rendered-md')]);
+      MathJax.typeset([current_bot_rendered_message]);
       hljs.highlightAll();
     }
 

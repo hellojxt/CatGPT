@@ -1,12 +1,13 @@
 import os
 import platform
-
+import gevent.monkey
+gevent.monkey.patch_all()
 system = platform.system()
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent')
 import tiktoken
 import openai
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -63,7 +64,7 @@ def send_message(dirname, message, top_p, temperture, presence_penalty):
             emit('response', chunk["choices"][0]["delta"]["content"])
             # print(chunk["choices"][0]["delta"]["content"])
             response += chunk["choices"][0]["delta"]["content"]
-            time.sleep(0.01)
+            # time.sleep(0.01)
     emit('response_end', '')
     prompt.messages.append({"role": "assistant", "content": response})
     num_tokens = num_tokens_from_msg(prompt.full())
@@ -101,7 +102,7 @@ def saveData():
             f.write('[]')
     if not os.path.exists(f'./data/{user}/{dirname}/sysprompt.txt'):
         with open(f'./data/{user}/{dirname}/sysprompt.txt', 'w') as f:
-            defalut_sysprompt = [{"role": "system", "content": "You are a helpful assistant."}]
+            defalut_sysprompt = [{"role": "system", "content": "You are a helpful assistant. Mathematical formulas and symbols in your answer must be wrapped in $"}]
             f.write(str(defalut_sysprompt))
     return 'saveData success'
 
@@ -138,7 +139,7 @@ def askTitle():
     prompt = Prompt(dirname)
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=prompt.full() + [{"role": "user", "content": "回复**5个字**以内总结我们对话的标题，必须回答，不能拒绝。直接返回标题，不要附带任何其他内容，也不要附带任何标点符号。"}],
+        messages=prompt.full() + [{"role": "user", "content": "回复**5个字**以内总结我们对话的标题，必须回答，不能拒绝。直接返回标题，不要附带“标题”，“总结”之类的次，结尾不要有句号"}],
         temperature=0.1,
         max_tokens=10,
     )
@@ -169,4 +170,4 @@ if __name__ == '__main__':
     print('data dir: ', f'./data/{user}')
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     print(f'Server is running on http://127.0.0.1:{Port}')
-    socketio.run(app, debug=True, port=Port)
+    socketio.run(app, debug=False, port=Port)
