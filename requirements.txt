@@ -4,3 +4,4 @@ openai
 tiktoken
 rich
 gevent
+gevent-websocket
