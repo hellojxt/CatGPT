@@ -173,7 +173,7 @@
       message = message.replace(/（/g, "(").replace(/）/g, ")");
       buffer += message;
       current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
-      if (buffer_idx % 5 != 0) {
+      if (buffer_idx % 10 != 0) {
         sub_element = current_bot_rendered_message;
         while (sub_element.lastElementChild != null && sub_element.lastElementChild.nextElementSibling == null)
           sub_element = sub_element.lastElementChild;
