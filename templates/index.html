@@ -170,6 +170,7 @@
     }
 
     socket.on("response", function (message) {
+      message = message.replace(/（/g, "(").replace(/）/g, ")");
       buffer += message;
       current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
       if (buffer_idx % 5 != 0) {
