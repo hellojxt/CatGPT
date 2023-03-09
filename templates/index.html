@@ -294,16 +294,22 @@
     function sendMessage() {
       var origin_message = messageInput.val();
       message = origin_message.replace(/\n/gi, '<br>');
+      /* replace  <space>//<space> with <space>////<space>  */
+      message = message.replace(/ \/\/ /gi, " /\/\/\/ ");
       const lastChildRendered = document.getElementById("rendered-md").lastElementChild;
       const lastChildSources = document.getElementById("sources").lastElementChild;
       if (!lastChildRendered || !lastChildSources || lastChildRendered.classList.contains("bot-message-block")) {
         var user_block_sources = create_new_user_message_block(message);
-        var user_block_rendered = create_new_user_message_block(markdown_to_html(message));
+        var user_block_rendered = create_new_user_message_block(message);
         document.getElementById("rendered-md").appendChild(user_block_rendered);
         document.getElementById("sources").appendChild(user_block_sources);
+        MathJax.typeset([user_block_rendered.children[0]]);
+        user_block_rendered.children[0].innerHTML = markdown_to_html(user_block_rendered.children[0].innerHTML);
       } else {
         lastChildRendered.children[0].innerHTML = message;
-        lastChildSources.children[0].innerHTML = markdown_to_html(message);
+        lastChildSources.children[0].innerHTML = message;
+        MathJax.typeset([lastChildRendered.children[0]]);
+        lastChildRendered.children[0].innerHTML = markdown_to_html(lastChildRendered.children[0].innerHTML);
       }
       messageInput.val('').height(originalHeight);
       var bot_block_sources = create_new_bot_message_block("");
