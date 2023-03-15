@@ -48,6 +48,8 @@
 
     <!-- <button class="copybutton">Copy</button> -->
     <button onclick="toggleSourceRender()" id="toggle-source-render">Render</button>
+    <button onclick="toggleMathJax()" id="toggle-mathjax">Enable Mathjax</button>
+
     <div class="container" id=chatWindowContainer style="position:relative;">
       <div id=rendered-md class="chat-window" style="display:block;"></div>
       <div id=sources class="chat-window" style="display:none;"></div>
@@ -65,8 +67,6 @@
         <label for="preSlider" id = "preSliderLabel"> Presence-penalty: 0.00 </label>
         <input type="range" id="preSlider" min="-200" max="200" step="1" value="0" oninput="inputpre(this.value)" onchange="setpre(this.value)">
     </label>
-    
-    
 
     <div id="sys-message-input-container" class ="hideMsg" >
       <textarea id="sys-message-input" placeholder="Type your message here...">You are a helpful assistant.</textarea>
@@ -86,6 +86,7 @@
     var GPTtemperature = 1;
     var GPTTopp = 1;
     var GPTpre = 0;
+    var use_mathjax = true;
     showdown.setFlavor('github');
     showdown.setOption('backslashEscapesHTMLTags', 'true');
     var converter = new showdown.Converter();
@@ -94,7 +95,14 @@
         getSysPrompt(current_selected_title.name);
         showSysMessageInput();
     }
-
+    function toggleMathJax(){
+        use_mathjax = !use_mathjax;
+        if(use_mathjax){
+            $("#toggle-mathjax").text("Enable Mathjax");
+        }else{
+            $("#toggle-mathjax").text("Disable Mathjax");
+        }
+    }
     function setTemperature(temperature) {
         GPTtemperature = temperature / 100;
         document.getElementById("temperatureSliderLabel").innerHTML = "Temperature: " + GPTtemperature.toFixed(2);
@@ -169,15 +177,22 @@
       }
     }
 
+    function mathjax_process(container){
+      if (use_mathjax){
+        MathJax.typeset([container]);
+      }
+    }
+    
     socket.on("response", function (message) {
       message = message.replace(/（/g, "(").replace(/）/g, ")");
       buffer += message;
       current_bot_source_message.innerHTML += message.replace(/\n/gi, '<br>');
       if (buffer_idx % 10 != 0) {
-        sub_element = current_bot_rendered_message;
-        while (sub_element.lastElementChild != null && sub_element.lastElementChild.nextElementSibling == null)
-          sub_element = sub_element.lastElementChild;
-        sub_element.innerHTML += message.replace(/\n/gi, '<br>');
+        if (current_bot_rendered_message.lastElementChild != null){
+            sub_element = current_bot_rendered_message.lastElementChild;
+            sub_element.innerHTML += message.replace(/\n/gi, '<br>');
+        }else
+            current_bot_rendered_message.innerHTML += message.replace(/\n/gi, '<br>');
       } else {
         // check numbers of ``` in buffer
         var count = (buffer.match(/```/g) || []).length;
@@ -188,8 +203,9 @@
         // replace ```cuda with ```c++
         buffer2 = buffer2.replace(/```cuda/g, "```c++");
         current_bot_rendered_message.innerHTML = buffer2;
-        MathJax.typeset([current_bot_rendered_message]);
+        mathjax_process(current_bot_rendered_message);
         current_bot_rendered_message.innerHTML = markdown_to_html(current_bot_rendered_message.innerHTML);
+        current_bot_rendered_message.innerHTML = current_bot_rendered_message.innerHTML.replace(/&amp;/g, "&");
         hljs.highlightAll();
       }
       scroll_distance = get_scroll_distance();
@@ -202,10 +218,12 @@
 
     socket.on("response_end", function (message) {
       current_bot_rendered_message.innerHTML = buffer;
-      MathJax.typeset([current_bot_rendered_message]);
+      mathjax_process(current_bot_rendered_message);
       current_bot_rendered_message.innerHTML = markdown_to_html(current_bot_rendered_message.innerHTML);
-      console.log("buffer: ", buffer);
-      console.log(current_bot_rendered_message.innerHTML);
+      current_bot_rendered_message.innerHTML = current_bot_rendered_message.innerHTML.replace(/&amp;/g, "&");
+
+    //   console.log("buffer: ", buffer);
+    //   console.log(current_bot_rendered_message.innerHTML);
       buffer = "";
       buffer_idx = 0;
       update_mathjax_hl();
@@ -237,7 +255,7 @@
     });
 
     function update_mathjax_hl() {
-      MathJax.typeset([current_bot_rendered_message]);
+      mathjax_process(current_bot_rendered_message);
       hljs.highlightAll();
     }
 
@@ -304,12 +322,12 @@
         var user_block_rendered = create_new_user_message_block(message);
         document.getElementById("rendered-md").appendChild(user_block_rendered);
         document.getElementById("sources").appendChild(user_block_sources);
-        MathJax.typeset([user_block_rendered.children[0]]);
+        mathjax_process(user_block_rendered.children[0]);
         user_block_rendered.children[0].innerHTML = markdown_to_html(user_block_rendered.children[0].innerHTML);
       } else {
         lastChildRendered.children[0].innerHTML = message;
         lastChildSources.children[0].innerHTML = message;
-        MathJax.typeset([lastChildRendered.children[0]]);
+        mathjax_process(lastChildRendered.children[0]);
         lastChildRendered.children[0].innerHTML = markdown_to_html(lastChildRendered.children[0].innerHTML);
       }
       messageInput.val('').height(originalHeight);

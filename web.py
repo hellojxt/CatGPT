@@ -12,6 +12,7 @@ import tiktoken
 import openai
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+
 class Prompt:
     def __init__(self, dirname) -> None:
         with open(f'./data/{user}/{dirname}/sysprompt.txt', 'r') as f:
@@ -22,12 +23,13 @@ class Prompt:
 
     def full(self):
         return self.system_message + self.messages
-    
+
     def save(self):
         with open(f'./data/{user}/{self.dirname}/prompt.txt', 'w') as f:
             f.write(str(self.messages))
         with open(f'./data/{user}/{self.dirname}/sysprompt.txt', 'w') as f:
             f.write(str(self.system_message))
+
 
 def num_tokens_from_msg(msg) -> int:
     """Returns the number of tokens in a text string."""
@@ -37,14 +39,16 @@ def num_tokens_from_msg(msg) -> int:
         num_tokens += len(encoding.encode(string))
     return num_tokens
 
-# 定义主页面路由
+
 @app.route('/')
 def home():
     return render_template('index.html')
+
+
 import time
 import shutil
 
-# 定义用于响应用户输入的路由
+
 @socketio.on('send_message')
 def send_message(dirname, message, top_p, temperture, presence_penalty):
     print('dirname: ', dirname)
@@ -57,7 +61,7 @@ def send_message(dirname, message, top_p, temperture, presence_penalty):
         temperature=temperture,
         top_p=top_p,
         presence_penalty=presence_penalty,
-        )
+    )
     response = ""
     for chunk in completion:
         if "content" in chunk["choices"][0]["delta"] and len(chunk["choices"][0]["delta"]["content"]) > 0:
@@ -69,7 +73,7 @@ def send_message(dirname, message, top_p, temperture, presence_penalty):
     prompt.messages.append({"role": "assistant", "content": response})
     num_tokens = num_tokens_from_msg(prompt.full())
     print('num_tokens: ', num_tokens)
-    print('cost: {:.2f} yuan'.format(num_tokens / 1000 * 0.002* 7))
+    print('cost: {:.2f} yuan'.format(num_tokens / 1000 * 0.002 * 7))
     while num_tokens_from_msg(prompt.full()) > 2048:
         prompt.messages.pop(0)
     prompt.save()
@@ -78,11 +82,12 @@ def send_message(dirname, message, top_p, temperture, presence_penalty):
     print('top_p: ', top_p)
     print('presence_penalty: ', presence_penalty)
 
+
 @socketio.on('send_system_message')
 def send_system_message(dirname, message):
     sys_prompt = [{"role": "system", "content": message}]
     with open(f'./data/{user}/{dirname}/sysprompt.txt', 'w') as f:
-            f.write(str(sys_prompt))
+        f.write(str(sys_prompt))
     print('send_system_message: ', message)
 
 
@@ -102,9 +107,11 @@ def saveData():
             f.write('[]')
     if not os.path.exists(f'./data/{user}/{dirname}/sysprompt.txt'):
         with open(f'./data/{user}/{dirname}/sysprompt.txt', 'w') as f:
-            defalut_sysprompt = [{"role": "system", "content": "You are a helpful assistant. Mathematical formulas and symbols in your answer must be wrapped in $"}]
+            defalut_sysprompt = [
+                {"role": "system", "content": "You are a helpful assistant. Mathematical formulas and symbols in your answer must be wrapped in $. Let's think step by step and explain the calculation step by step."}]
             f.write(str(defalut_sysprompt))
     return 'saveData success'
+
 
 @app.route('/getData')
 def getData():
@@ -120,7 +127,8 @@ def getSysPrompt():
     with open(f'./data/{user}/{dirname}/sysprompt.txt', 'r') as f:
         sysprompt = eval(f.read())
     return sysprompt[0]["content"]
-    
+
+
 @app.route('/getAllDataDirs', methods=['GET'])
 def getAllDataDirs():
     import os
@@ -137,14 +145,19 @@ def getAllDataDirs():
 def askTitle():
     dirname = request.args.get('dirname')
     prompt = Prompt(dirname)
+    prompt.system_message = [{
+        "role": "system", "content": "You are a helpful assistant. "
+    }]
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=prompt.full() + [{"role": "user", "content": "回复**5个字**以内总结我们对话的标题，必须回答，不能拒绝。直接返回标题，不要附带“标题”，“总结”之类的次，结尾不要有句号"}],
+        messages=prompt.full() +
+        [{"role": "user", "content": "Title in 5 Words or Less:"}],
         temperature=0.1,
         max_tokens=10,
     )
     response = completion.choices[0].message["content"]
     return response
+
 
 @app.route('/deleteData')
 def deleteData():
@@ -170,4 +183,4 @@ if __name__ == '__main__':
     print('data dir: ', f'./data/{user}')
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     print(f'Server is running on http://127.0.0.1:{Port}')
-    socketio.run(app, debug=False, port=Port)
+    socketio.run(app, debug=True, port=Port)

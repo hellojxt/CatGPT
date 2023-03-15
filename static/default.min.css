@@ -575,3 +575,25 @@ code {
     width: 12%; /* 调整滑块的宽度 */
     text-align: center;
 }
+
+
+
+#toggle-mathjax {
+  z-index: 9999;
+  position: fixed;
+  top: 5%;
+  right: 10%;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  font-family: 'Tilt Neon';
+  width: 80px;
+  height: 40px;
+}
+
+#toggle-mathjax:hover {
+  background-color: #ddd;
+  border-color: #aaa;
+  color: #045f9c;
+}
